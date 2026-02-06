@@ -1,4 +1,6 @@
 import { Routes, Route } from "react-router-dom";
+import AuthPage from "../pages/AuthPage";
+
 
 import LandingPage from "../pages/landing/landingPage";
 import ParentDash from "../pages/parentDash";
@@ -12,6 +14,8 @@ function AppRoutes() {
 
       {/* PUBLIC LANDING */}
       <Route path="/" element={<LandingPage />} />
+      <Route path="/auth" element={<AuthPage />} />
+
 
       {/* DASHBOARDS */}
       <Route path="/parent" element={<ParentDash />} />

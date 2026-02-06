@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 function ParentingGuideCard() {
+
+  const navigate = useNavigate();
 
   const styles = {
 
@@ -118,8 +122,19 @@ function ParentingGuideCard() {
         </p>
 
         <div style={styles.buttons}>
-          <button style={styles.primaryBtn}>Get Started</button>
-          <button style={styles.secondaryBtn}>Learn More</button>
+          <button
+            style={styles.primaryBtn}
+            onClick={() => navigate("/auth")}
+          >
+            Get Started
+          </button>
+
+          <button
+            style={styles.secondaryBtn}
+            onClick={() => navigate("/auth")}
+          >
+            Learn More
+          </button>
         </div>
 
       </div>

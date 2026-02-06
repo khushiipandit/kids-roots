@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 function CollaborationCard() {
+
+  const navigate = useNavigate();
 
   const styles = {
 
@@ -113,8 +117,19 @@ function CollaborationCard() {
         </p>
 
         <div style={styles.buttons}>
-          <button style={styles.primaryBtn}>Explore Activities</button>
-          <button style={styles.secondaryBtn}>Learn More</button>
+          <button
+            style={styles.primaryBtn}
+            onClick={() => navigate("/auth")}
+          >
+            Explore Activities
+          </button>
+
+          <button
+            style={styles.secondaryBtn}
+            onClick={() => navigate("/auth")}
+          >
+            Learn More
+          </button>
         </div>
 
       </div>
