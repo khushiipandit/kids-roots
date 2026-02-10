@@ -20,7 +20,7 @@ class GrowthTracker:
         if height_range:
             if height_cm < height_range[0]:
                 status = "Stunted Growth"
-                advice = "Height is less then standard. increase the diet of calcium and protein."
+                advice = "Height is less than standard. increase the diet of calcium and protein."
             elif bmi > 25:
                 status = "Overweight"
                 advice = "increase the physical activity and decrease the sugar intake."
