@@ -61,8 +61,9 @@ function AuthPage() {
       await loginWithGoogle();
       navigate("/parent");
     } catch (err) {
+      console.error("Google sign-in error:", err);
       if (err.code !== "auth/popup-closed-by-user") {
-        setError("Google sign-in failed. Please try again.");
+        setError(err.message || "Google sign-in failed. Please try again.");
       }
     }
   }
