@@ -1,0 +1,29 @@
+import { useState, useEffect } from "react";
+
+function Hero() {
+
+  const slides = [
+
+    {
+      title: "Guided Parenting for Modern Families",
+      desc: "AI-powered insights and emotional support for confident parenting.",
+      img: "/hero1.png"
+    },
+
+    {
+      title: "Gamified Learning for Children",
+      desc: "Fun interactive games that support growth and emotional learning.",
+      img: "/hero2.png"
+    },
+
+    {
+      title: "Grow Together",
+      desc: "Parent-child activities that strengthen bonding and learning.",
+      img: "/hero3.png"
+    },
+
+    {
+      title: "",
+      desc: "Milestones, health tracking, and vaccination reminders.",
+     
+Smart Growth Tracking
