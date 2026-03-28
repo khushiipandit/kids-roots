@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import AuthPage from "../pages/AuthPage";
 import AuthRedirect from "../pages/AuthRedirect";
 import PrivateRoute from "../components/PrivateRoute";
+import GlobalLayout from "../components/layout/GlobalLayout";
 
 import LandingPage from "../pages/landing/landingPage";
 import ParentDash from "../pages/parentDash";
@@ -13,8 +14,10 @@ function AppRoutes() {
   return (
     <Routes>
 
-      {/* PUBLIC ROUTES */}
-      <Route path="/" element={<LandingPage />} />
+      {/* Landing page gets the Navbar via GlobalLayout */}
+      <Route path="/" element={<GlobalLayout><LandingPage /></GlobalLayout>} />
+
+      {/* Auth and dashboards are standalone — no Navbar */}
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/auth-redirect" element={<PrivateRoute><AuthRedirect /></PrivateRoute>} />
 
