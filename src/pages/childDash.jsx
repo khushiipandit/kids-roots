@@ -6,6 +6,7 @@ import {
   collection, serverTimestamp
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { updateProfile } from "firebase/auth";
 
 /* ── Quiz questions (general + values-based) ── */
 const QUIZZES = [
@@ -86,11 +87,16 @@ const STORIES = [
 ];
 
 export default function ChildDash() {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, logout, refetchProfile } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("home");
+  const [activeTab, setActiveTab] = useState(userProfile && !userProfile.ageGroup ? "profile" : "home");
   const [xp, setXp] = useState(0);
   const [xpLoaded, setXpLoaded] = useState(false);
+
+  /* Profile editing state */
+  const [editingName, setEditingName] = useState(userProfile?.displayName || "");
+  const [editingAgeGroup, setEditingAgeGroup] = useState(userProfile?.ageGroup || "");
+  const [saving, setSaving] = useState(false);
 
   /* Quiz state */
   const [qIdx, setQIdx] = useState(0);
@@ -106,6 +112,16 @@ export default function ChildDash() {
   const progress = xp % 100;
   const streak = 3; // static for now — can be Firestore-tracked later
 
+  /* ── Update initial tab if age group is missing ── */
+  useEffect(() => {
+    if (userProfile && !userProfile.ageGroup) {
+      setActiveTab("profile");
+    }
+    // Set editing states
+    setEditingName(userProfile?.displayName || "");
+    setEditingAgeGroup(userProfile?.ageGroup || "");
+  }, [userProfile]);
+
   /* ── Load XP from Firestore on mount ── */
   useEffect(() => {
     if (!currentUser) return;
@@ -120,6 +136,30 @@ export default function ChildDash() {
   async function handleLogout() {
     await logout();
     navigate("/");
+  }
+
+  /* ── Save profile changes ── */
+  async function handleSaveProfile() {
+    if (!currentUser) return;
+    setSaving(true);
+    try {
+      const updates = {};
+      if (editingName.trim() && editingName !== userProfile?.displayName) {
+        updates.displayName = editingName.trim();
+        await updateProfile(currentUser, { displayName: editingName.trim() });
+      }
+      if (editingAgeGroup && editingAgeGroup !== userProfile?.ageGroup) {
+        updates.ageGroup = editingAgeGroup;
+      }
+      if (Object.keys(updates).length > 0) {
+        await updateDoc(doc(db, "users", currentUser.uid), updates);
+        await refetchProfile();
+        setActiveTab("home"); // Switch to home after saving
+      }
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    }
+    setSaving(false);
   }
 
   /* ── Answer quiz question + save assessment to Firestore ── */
@@ -323,6 +363,7 @@ export default function ChildDash() {
             { id: "quiz",         label: "🧠 Quiz" },
             { id: "stories",      label: "📖 Stories" },
             { id: "achievements", label: "🏆 Achievements" },
+            { id: "profile",      label: "👤 Profile" },
           ].map((t) => (
             <button key={t.id} style={s.tab(activeTab === t.id)} onClick={() => setActiveTab(t.id)}>
               {t.label}
@@ -440,6 +481,104 @@ export default function ChildDash() {
               <div style={{ fontSize: "13px", color: "#888", marginTop: "4px" }}>
                 {100 - progress} XP more to reach Level {level + 1}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── PROFILE ── */}
+        {activeTab === "profile" && (
+          <div style={s.card}>
+            <h2 style={{ fontSize: "20px", fontWeight: "700", color: "#1a1a2e", marginBottom: "20px" }}>
+              👤 Your Profile
+            </h2>
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#555", marginBottom: "6px" }}>
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: "15px",
+                    boxSizing: "border-box",
+                    outline: "none",
+                    background: "#fafafa"
+                  }}
+                  placeholder="Enter your full name"
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#555", marginBottom: "6px" }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={userProfile?.email || ""}
+                  readOnly
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: "15px",
+                    boxSizing: "border-box",
+                    outline: "none",
+                    background: "#f5f5f5",
+                    color: "#888"
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: "14px", fontWeight: "600", color: "#555", marginBottom: "6px" }}>
+                  Age Group {!userProfile?.ageGroup && <span style={{ color: "#dc2626" }}>* Required</span>}
+                </label>
+                <select
+                  value={editingAgeGroup}
+                  onChange={(e) => setEditingAgeGroup(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "12px 14px",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e0e0e0",
+                    fontSize: "15px",
+                    boxSizing: "border-box",
+                    outline: "none",
+                    background: "#fafafa",
+                    cursor: "pointer"
+                  }}
+                >
+                  <option value="">Select your age group</option>
+                  <option value="toddlers">Toddlers (2-4 years)</option>
+                  <option value="lkg">LKG (5-6 years)</option>
+                  <option value="primary">Primary (7-10 years)</option>
+                  <option value="school-going">School-going (11-13 years)</option>
+                </select>
+              </div>
+              <button
+                onClick={handleSaveProfile}
+                disabled={saving}
+                style={{
+                  marginTop: "16px",
+                  width: "100%",
+                  padding: "14px",
+                  background: "linear-gradient(135deg,#6b6bd6,#8b5cf6)",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "12px",
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  cursor: saving ? "not-allowed" : "pointer",
+                  opacity: saving ? 0.7 : 1
+                }}
+              >
+                {saving ? "Saving..." : "Save Changes"}
+              </button>
             </div>
           </div>
         )}

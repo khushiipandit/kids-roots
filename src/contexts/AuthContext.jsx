@@ -59,23 +59,40 @@ export function AuthProvider({ children }) {
   }
 
   async function fetchUserProfile(uid) {
-    const snap = await getDoc(doc(db, "users", uid));
-    if (snap.exists()) {
-      setUserProfile(snap.data());
-    } else {
+    try {
+      const snap = await getDoc(doc(db, "users", uid));
+      if (snap.exists()) {
+        setUserProfile(snap.data());
+      } else {
+        setUserProfile(null);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
       setUserProfile(null);
+    }
+  }
+
+  async function refetchProfile() {
+    if (currentUser) {
+      await fetchUserProfile(currentUser.uid);
     }
   }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      if (user) {
-        await fetchUserProfile(user.uid);
-      } else {
+      try {
+        setCurrentUser(user);
+        if (user) {
+          await fetchUserProfile(user.uid);
+        } else {
+          setUserProfile(null);
+        }
+      } catch (error) {
+        console.error("Auth state initialization failed:", error);
         setUserProfile(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsubscribe;
   }, []);
@@ -88,6 +105,7 @@ export function AuthProvider({ children }) {
     login,
     loginWithGoogle,
     logout,
+    refetchProfile,
     loading
   };
 
